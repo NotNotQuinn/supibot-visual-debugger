@@ -1,0 +1,24 @@
+* {
+	padding: 0;
+	margin: 0;
+}
+.mono {
+	font-family: 'Fira Code', monospace;
+}
+
+:root {
+	background-color: var(--neutral-background);
+	color: var(--neutral-text);
+	color-scheme: dark;
+	/* font-family: 'Courier New', Courier, monospace; */
+	font-family: sans-serif;
+}
+:root {
+	--neutral-background: #383c47;
+	--neutral-text: #d9d5d0;
+	--selection-background: #0d56ad;
+	--selection-text: #e8e6e3;
+  }
+a {
+	color: #3d96fe;
+}
