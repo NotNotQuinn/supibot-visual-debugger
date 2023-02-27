@@ -26,10 +26,6 @@
 </script>
 
 <style>
-
-	p {
-		padding: .15em 0;
-	}
 	.notice-type-success {
 		--notice-color: hsl(120, 93%, 79%);
 	}
@@ -46,6 +42,10 @@
 		--notice-color: white;
 	}
 
+	.notice-content {
+		padding-left: 1ex;
+	}
+
 	.notice > .notice-label {
 		content: var(--notice-title);
 		color: var(--notice-color);
@@ -60,21 +60,27 @@
 	}
 
 	.notice {
-		white-space: break-spaces;
 		display: flex;
 	}
 
 	.textual-message {
-		padding: .75ex;
+		white-space: break-spaces;
+		padding: 1ex;
+	}
+	:global(.textual-message) + .textual-message {
+		padding-top: 0;
+	}
+	.textual-message:where(p) {
+		background-color: red;
 	}
 </style>
 
 <div class="textual-message">
 	{#if typeof part.notice == "undefined" || part.notice == "none"}
-		<p class="raw-text">{part.message}</p>
+		<p>{part.message}</p>
 	{:else}
 		<div class={"notice notice-type-"+part.notice} class:emphasis={part.emphasis}>
-			<span class="notice-label">{(part.noticeLabel ?? part.notice.toUpperCase())+': '}</span>
+			<span class="notice-label">{(part.noticeLabel ?? part.notice.toUpperCase())}:</span>
 			<span class="notice-content">{part.message}</span>
 		</div>
 	{/if}

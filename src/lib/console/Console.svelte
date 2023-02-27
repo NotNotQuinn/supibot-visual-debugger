@@ -12,12 +12,15 @@
 
 	let messages: Array<MessagePart>[] = [
 		[
-			{ notice: 'warning',emphasis:true, message: 'This is only a UI, so far.\nNon functional.'},
+			{ notice: 'warning',emphasis:true, message: 'This is only a UI, so far. (non functional)\nOnly basic commands such as \'clear\' and \'h\' are implemented.\nWhat you see below is a "hard-coded" command execution.'},
 		],
 		[
-			{message:"This is SVD v1.0.0 (commit b1ef426a, built 2023-02-26)"},
-			"visual:dashed-horizontal-line",
-			{notice:"info", message:"Logged in as quinndt (uid: 6714725)"},
+			{ notice: 'info',emphasis:true, message: 'The sidebar to the left is for debugging UI only, to add different elements messages.\n\nIn the future, the sidebar will be used for:\n  - Showing `$abb tee` contents\n  - Showing command stack\n  - Other metadata'},
+		],
+		[
+			{message:"This is SVD v0.0.1 (commit deadbeef)"},
+			"visual:dashed-horizontal-line wide",
+			{notice:"info", message:"You are not logged in."},
 		],
 		[
 			{message:"SVD> $ping"},

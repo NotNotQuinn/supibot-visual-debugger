@@ -6,21 +6,24 @@
 	 *
 	 * All possible values here start with `"visual:"` to distinguish them from possible future message parts.
 	 */
-	 export type VisualMessagePart =
-	 	// solid-horizontal-line
-		| "visual:solid-horizontal-line"
-		| "visual:solid-horizontal-line wide"
+	 export type VisualMessagePart = NonNullable<typeof ValidVisualMessageParts[number]>;
+
+	/** All valid VisualMessagePart values. */
+	export const ValidVisualMessageParts = [
+		// solid-horizontal-line
+		"visual:solid-horizontal-line",
+		"visual:solid-horizontal-line wide",
 	 	// dotted-horizontal-line
-		| "visual:dotted-horizontal-line"
-		| "visual:dotted-horizontal-line wide"
+		"visual:dotted-horizontal-line",
+		"visual:dotted-horizontal-line wide",
 		// dashed-horizontal-line
-		| "visual:dashed-horizontal-line"
-		| "visual:dashed-horizontal-line wide"
-	;
+		"visual:dashed-horizontal-line",
+		"visual:dashed-horizontal-line wide",
+	] as const;
 
 	import type { MessagePart } from '$lib/console/ConsoleMessage.svelte'
 	export function isVisualMessage(part: MessagePart): part is VisualMessagePart {
-		return typeof part == "string" && part.startsWith("visual:");
+		return typeof part == "string" && ValidVisualMessageParts.includes(part);
 	}
 </script>
 

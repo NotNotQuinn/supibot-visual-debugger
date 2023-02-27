@@ -36,6 +36,10 @@
 		flex-direction: column;
 		align-self: stretch;
 	}
+
+	.padded-content {
+		padding: 1ex;
+	}
 </style>
 
 <!-- foo -->
@@ -46,10 +50,12 @@
 		{:else if isTextualMessage(part)}
 			<TextualMessage {part} />
 		{:else}
+		<div class="padded-content">
 			<i>[message render error]: Invalid message part. JSON is shown below.</i>
 			<div class="mono" style="white-space: break-spaces">{JSON.stringify(part)}</div>
+		</div>
 		{/if}
 	{:else}
-		<i style="padding: calc(.75ex + .15em) .75ex;">empty message</i>
+		<i class="padded-content">empty message</i>
 	{/each}
 </div>
