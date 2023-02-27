@@ -24,6 +24,11 @@
 	h1 {
 		margin: 1rem
 	}
+
+	.footer {
+		text-align: center;
+		padding-bottom: 0;
+	}
 </style>
 
 <svelte:head>
@@ -35,6 +40,10 @@
 
 	<Console />
 
-	<footer>Inspired by <a href="https://kotmisia.pl/sbdbg/">SBDBG</a> (<a href="https://git.kotmisia.pl/mm2pl/sbdbg">git</a>) by Mm2pl</footer>
+	<footer class="footer">
+		<span class="footer-end"><a href="//github.com/notnotquinn/supibot-visual-debugger" target="_blank" rel="noreferrer external">Source Code</a></span>
+		&#9679;
+		<span class="footer-start">Inspired by Mm2pl's <a target="_blank" rel="noreferrer external" href="https://kotmisia.pl/sbdbg/">SBDBG</a> (<a target="_blank" rel="noreferrer external" href="https://git.kotmisia.pl/mm2pl/sbdbg">git</a>)</span>
+	</footer>
 </div>
 
