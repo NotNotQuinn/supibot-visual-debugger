@@ -1,6 +1,16 @@
 <script lang="ts">
 	import Console from "$lib/console/Console.svelte";
+
+	// Generated at build time - can't get types to work.
+	// Types are located in node_modules/vite-plugin-info/client.d.ts
+	// @ts-expect-error
+	import { sha } from '~build/info';
+	// Do not use alpha channel:
+	// makes things too dank to deal with
+	const shaColourHash = sha.slice(0,6);
+	const shaColourCSS = '#'+shaColourHash
 </script>
+
 <style>
 	/* :global(*) {
 		background-color: #adff2f08;
@@ -17,7 +27,6 @@
 		flex-direction: column;
 		align-items: stretch;
 		height: 100vh;
-		padding: 1rem;
 		box-sizing: border-box;
 	}
 
@@ -27,8 +36,48 @@
 
 	.footer {
 		text-align: center;
-		padding-bottom: 0;
 	}
+
+	.footer a {
+		text-decoration: none;
+	}
+
+	.footer > * + * {
+		border-left: 1px solid grey;
+		padding: 1ex 0;
+		padding-left: 1rem;
+		margin-left: 1rem;
+	}
+
+	.git-logo {
+		height: 28px;
+		vertical-align: middle;
+	}
+
+	.git-logo-link {
+		margin-right: 2ex;
+	}
+
+	.sha-colour-shower {
+		border-radius: 100px; /* a large amount */
+		padding: 10px 20px;
+		padding-bottom: 13px;
+		background-color: var(--sha-color);
+
+		/* Margin to correct for drop-shadow */
+		margin-right: 2px;
+		filter: drop-shadow(2px 3px 0px black);
+	}
+
+	.sha-colour-shower:hover::before {
+		z-index: -1;
+	}
+
+	.sha-colour-shower > * {
+		color: white;
+		/* color: var(--sha-color); */
+		mix-blend-mode: difference;
+}
 </style>
 
 <svelte:head>
@@ -41,9 +90,24 @@
 	<Console />
 
 	<footer class="footer">
-		<span class="footer-end"><a href="//github.com/notnotquinn/supibot-visual-debugger" target="_blank" rel="noreferrer external">Source Code</a></span>
-		&#9679;
-		<span class="footer-start">Inspired by Mm2pl's <a target="_blank" rel="noreferrer external" href="https://kotmisia.pl/sbdbg/">SBDBG</a> (<a target="_blank" rel="noreferrer external" href="https://git.kotmisia.pl/mm2pl/sbdbg">git</a>)</span>
+		<span>
+			<span class="sha-colour-shower mono" style:--sha-color={shaColourCSS}>
+				<a
+					class="git-logo-link"
+					href="//github.com/notnotquinn/supibot-visual-debugger"
+					target="_blank"
+					rel="noreferrer external"
+				><img src="/git-icon-white.svg" alt="Git VCS Logo" class="mono git-logo"></a
+				><a
+				target="_blank"
+				rel="noreferrer external"
+				href="//github.com/notnotquinn/supibot-visual-debugger/tree/{sha}"
+			>{shaColourHash}</a
+			></span></span><span
+			>
+			Inspired By Mm2pl's <a target="_blank" rel="noreferrer external" href="https://kotmisia.pl/sbdbg/">SBDBG</a>
+			(<a target="_blank" rel="noreferrer external" href="https://git.kotmisia.pl/mm2pl/sbdbg">Git</a>)
+		</span>
 	</footer>
 </div>
 
