@@ -1,6 +1,7 @@
 <script lang="ts">
 	// Imports
 	import { setContext } from 'svelte';
+	import { writable, type Writable } from 'svelte/store';
 
 	// Components
 	import ConsoleInput from "$lib/console/ConsoleInput.svelte";
@@ -8,14 +9,14 @@
 	import ConsoleMessageList from '$lib/console/ConsoleMessageList.svelte';
 
 	// Types
-	import type { MessagePart } from '$lib/console/ConsoleMessage.svelte';
+	import type { logMessagePartsFn, MessagePart } from '$lib/message';
 
 	let messages: Array<MessagePart>[] = [
 		[
 			{ notice: 'warning',emphasis:true, message: 'This is only a UI, so far. (non functional)\nOnly basic commands such as \'clear\' and \'h\' are implemented.\nWhat you see below is a "hard-coded" command execution.'},
 		],
 		[
-			{ notice: 'info',emphasis:true, message: 'The sidebar to the left is for debugging UI only, to add different elements messages.\n\nIn the future, the sidebar will be used for:\n  - Showing `$abb tee` contents\n  - Showing command stack\n  - Other metadata'},
+			{ notice: 'info',emphasis:true, message: 'The sidebar to the left is for debugging UI only, to add different elements messages.\n\nIn the future, the sidebar will/may be used for:\n  - Showing `$abb tee` contents\n  - Showing command stack\n  - Showing customData diff.\n  - Showing other metadata'},
 		],
 		[
 			{message:"This is SVD v0.0.1 (commit deadbeef)"},
@@ -98,8 +99,8 @@
 	};
 
 	// Bound variables.
-	let supibotCommand: string;
-	function runDebugCommand({ detail: user_input }: CustomEvent<string>) {
+	let supibotCommand: Writable<string> = writable();
+	function intakeDebugCommand({ detail: user_input }: CustomEvent<string>) {
 		logMessageParts(true, { message: "SVD> "+user_input }, "visual:solid-horizontal-line wide");
 
 		let [command_string, ...args] = user_input.split(' ');
@@ -127,7 +128,7 @@
 	 * @param beginMessage If true, creates a new Message.
 	 * @param parts The data to log. Shown in array order.
 	 */
-	function logMessageParts(beginMessage: boolean, ...parts: MessagePart[]) {
+	const logMessageParts: logMessagePartsFn = function logMessageParts(beginMessage: boolean, ...parts: MessagePart[]) {
 		if (messages.length == 0) beginMessage = true;
 		if (beginMessage) {
 			messages.push(parts);
@@ -139,19 +140,14 @@
 	setContext("logMessageParts", logMessageParts);
 </script>
 
-<script lang="ts" context="module">
-	export type logMessagePartsFn = (beginMessage: boolean, ...parts: MessagePart[]) => void;
-</script>
-
 <style>
 	.console-content {
 		border-left: var(--neutral-text) dotted 1px;
-		padding: 1ex;
 		display: flex;
 		flex-direction: column;
 		align-items: stretch;
 		flex: 4;
-		padding: 5px;
+		padding: 1ex;
 	}
 
 	.console-sidebar {
@@ -166,6 +162,7 @@
 		align-items: stretch;
 		overflow: hidden;
 		flex: 1;
+		padding: 0 1rem;
 	}
 </style>
 
@@ -176,12 +173,12 @@
 
 	<div class="console-content">
 		<ConsoleInput
-			bind:value={supibotCommand}
+			bind:value={$supibotCommand}
 			keybind="s"
 			noEnterEvent={true}
 			placeholder="Try: $pipe ping | shuffle"
 		>
-			<h4 style="display: inline">Supibot Command:</h4>
+			<span style="font-weight: bold;">Supibot Command:</span>
 		</ConsoleInput>
 
 		<ConsoleMessageList bind:messages />
@@ -189,9 +186,9 @@
 		<ConsoleInput
 			keybind="d"
 			placeholder="h for help"
-			on:enter={runDebugCommand}
+			on:enter={intakeDebugCommand}
 		>
-			<h4 style="display: inline">Debug Command:</h4>
+			<span style="font-weight: bold;">Debug Command:</span>
 		</ConsoleInput>
 	</div>
 </div>

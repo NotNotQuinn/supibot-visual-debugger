@@ -1,10 +1,12 @@
 <script lang="ts">
 	import { getContext } from 'svelte';
-	import { ValidVisualMessageParts } from '$lib/console/message/VisualMessage.svelte';
+	import {
+		ValidVisualMessageParts,
+		type MessagePart,
+		type VisualMessagePart,
+		type logMessagePartsFn
+	} from '$lib/message';
 
-	import type { logMessagePartsFn } from '$lib/console/Console.svelte';
-	import type { MessagePart } from '$lib/console/ConsoleMessage.svelte';
-	import type { VisualMessagePart } from '$lib/console/message/VisualMessage.svelte';
 
 	let new_message: boolean = true;
 	let emphasis: boolean = false;

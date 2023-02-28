@@ -1,22 +1,12 @@
-<script lang="ts" context="module">
-	import type { TextualMessagePart }from '$lib/console/message/TextualMessage.svelte';
-	import type { VisualMessagePart }from '$lib/console/message/VisualMessage.svelte';
-
-	/**
-	 * Represents a single part of a message.
-	 *
-	 * Messages are made up of a series of parts, and rendered in order.
-	 */
-	export type MessagePart =
-		| TextualMessagePart
-		| VisualMessagePart
-		// | CommandMessagePart
-	;
-</script>
-
 <script lang="ts" type="module">
-	import TextualMessage, { isTextualMessage } from "$lib/console/message/TextualMessage.svelte";
-	import VisualMessage, { isVisualMessage } from "$lib/console/message/VisualMessage.svelte";
+	import {
+		isTextualMessage,
+		isVisualMessage,
+		type MessagePart
+	} from "$lib/message";
+
+	import TextualMessage from '$lib/console/message/TextualMessage.svelte';
+	import VisualMessage from '$lib/console/message/VisualMessage.svelte';
 
 	// Exports / Props
 	/**

@@ -1,5 +1,5 @@
 <script lang='ts'>
-	import type { MessagePart } from '$lib/console/ConsoleMessage.svelte'
+	import type { MessagePart } from '$lib/message'
 	import ConsoleMessage from '$lib/console/ConsoleMessage.svelte'
 	export let messages: MessagePart[][];
 </script>
