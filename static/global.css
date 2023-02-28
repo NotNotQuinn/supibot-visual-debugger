@@ -1,24 +1,36 @@
+/* Reset default styles -because they are annoying */
 * {
 	padding: 0;
 	margin: 0;
 }
+
+/* Global utility class for monospace */
 .mono {
 	font-family: 'Fira Code', monospace;
 }
 
+/* Set colours and font */
 :root {
 	background-color: var(--neutral-background);
 	color: var(--neutral-text);
 	color-scheme: dark;
-	/* font-family: 'Courier New', Courier, monospace; */
 	font-family: sans-serif;
 }
+
+/* Variables */
 :root {
 	--neutral-background: #383c47;
 	--neutral-text: #d9d5d0;
 	--selection-background: #0d56ad;
 	--selection-text: #e8e6e3;
-  }
+}
+
+/* Since we replaced :root { color: ...; } */
 a {
 	color: #3d96fe;
+}
+
+/* Make typing less cramped */
+textarea {
+	padding: 1ex;
 }
