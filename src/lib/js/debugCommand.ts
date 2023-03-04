@@ -105,7 +105,7 @@ let commands: { [x: string]: DebugCommand; } = {
 		execute: async function debug_command_login(ctx) {
 			if (ctx.args.length == 0) {
 				ctx.writeConsole(false,
-					{ message: "To login go to https://supinic.com/user/auth-key and generate a key." }
+					{ message: "Usage: login <supibot user id> <API key>\nGo to https://supinic.com/user/auth-key to generate a key." }
 				);
 				return;
 			}
