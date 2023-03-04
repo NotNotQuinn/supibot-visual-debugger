@@ -47,17 +47,12 @@ const needLogin: (a: Action) => Action = a => {
 
 	return a;
 };
-const throws: (a: Action) => Action = a => {
-	return async function debug_command__THROWS(ctx) {
-		throw new TypeError("this is an unusual error...");
-	};
-};
 
 let commands: { [x: string]: DebugCommand; } = {
 	h: {
 		help_invocation: 'h',
 		help_text: 'Show help.',
-		execute: throws(async function debug_command_h(ctx) {
+		execute: async function debug_command_h(ctx) {
 			let command_objs = Object.values(commands);
 			let max_len = Math.max(...command_objs.map(i => i.help_invocation.length)) + 1;
 
@@ -68,7 +63,7 @@ let commands: { [x: string]: DebugCommand; } = {
 					noticeLabel: (command.help_invocation + (" ".repeat(max_len))).slice(0, max_len)
 				}, "visual:dashed-horizontal-line");
 			}
-		})
+		}
 	},
 	clear: {
 		help_invocation: 'clear',
