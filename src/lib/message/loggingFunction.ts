@@ -6,9 +6,9 @@ import type { MessagePart } from '$lib/message';
  * @param beginMessage If true, creates a new Message.
  * @param parts The data to log. Shown in array order.
  */
-export type logMessagePartsFn = (beginMessage: boolean, ...parts: MessagePart[]) => void;
+export type writeConsoleFn = (beginMessage: boolean, ...parts: MessagePart[]) => void;
 
 /**
- * Used as a unique key to get the logging function, in some contexts.
+ * Used as a unique key to get the logging function.
  */
-export const logSymbol = Symbol("logMessageParts");
+export const writeConsoleKey = Symbol("writeConsole");

@@ -4,7 +4,8 @@
 		ValidVisualMessageParts,
 		type MessagePart,
 		type VisualMessagePart,
-		type logMessagePartsFn
+		type writeConsoleFn,
+		writeConsoleKey
 	} from '$lib/message';
 
 
@@ -14,11 +15,11 @@
 	let visual: VisualMessagePart = "visual:solid-horizontal-line";
 	let noticeMessage = "";
 
-	const _logMessageParts = getContext<logMessagePartsFn>("logMessageParts")
-	const logMessageParts: logMessagePartsFn = (beginMessage: boolean, ...parts: MessagePart[]) => {
+	const _writeConsole = getContext<writeConsoleFn>(writeConsoleKey)
+	const writeConsole: writeConsoleFn = (beginMessage: boolean, ...parts: MessagePart[]) => {
 		if (beginMessage) console.log('beginMessage')
 		console.log(parts);
-		_logMessageParts(beginMessage, ...parts);
+		_writeConsole(beginMessage, ...parts);
 	}
 </script>
 
@@ -36,10 +37,10 @@
 	<p style="font-size: 10pt;">Internal representation shown in log.</p>
 
 	<textarea bind:value={message}></textarea>
-	<button on:click={() => logMessageParts(true) }>Append Empty Message</button><br>
+	<button on:click={() => writeConsole(true) }>Append Empty Message</button><br>
 
 	<button on:click={() => // @ts-expect-error
-		logMessageParts(new_message, { some: "invalid", data: "here" })}>Append Invalid Message Part</button><br>
+		writeConsole(new_message, { some: "invalid", data: "here" })}>Append Invalid Message Part</button><br>
 	<br>
 
 	<p>Options</p>
@@ -47,16 +48,16 @@
 	<br>
 
 	<p>Send 'just text':</p>
-	<button on:click={_=> logMessageParts(new_message, { message }) }>Just Text</button><br>
+	<button on:click={_=> writeConsole(new_message, { message }) }>Just Text</button><br>
 	<br>
 
 	<p>Send a 'Notice':</p>
 	<label><input type="checkbox" name="emphasis" id="emphasis" bind:checked={emphasis}> Emphasis</label><br>
-	<button on:click={_=> logMessageParts(new_message, { message, notice: 'notice', noticeLabel: noticeMessage || undefined, emphasis }) }>Notice</button><br>
-	<button on:click={_=> logMessageParts(new_message, { message, notice: 'success', noticeLabel: noticeMessage || undefined, emphasis }) }>Success</button><br>
-	<button on:click={_=> logMessageParts(new_message, { message, notice: 'info', noticeLabel: noticeMessage || undefined, emphasis }) }>Info</button><br>
-	<button on:click={_=> logMessageParts(new_message, { message, notice: 'warning', noticeLabel: noticeMessage || undefined, emphasis }) }>Warning</button><br>
-	<button on:click={_=> logMessageParts(new_message, { message, notice: 'error', noticeLabel: noticeMessage || undefined, emphasis }) }>Error</button><br>
+	<button on:click={_=> writeConsole(new_message, { message, notice: 'notice', noticeLabel: noticeMessage || undefined, emphasis }) }>Notice</button><br>
+	<button on:click={_=> writeConsole(new_message, { message, notice: 'success', noticeLabel: noticeMessage || undefined, emphasis }) }>Success</button><br>
+	<button on:click={_=> writeConsole(new_message, { message, notice: 'info', noticeLabel: noticeMessage || undefined, emphasis }) }>Info</button><br>
+	<button on:click={_=> writeConsole(new_message, { message, notice: 'warning', noticeLabel: noticeMessage || undefined, emphasis }) }>Warning</button><br>
+	<button on:click={_=> writeConsole(new_message, { message, notice: 'error', noticeLabel: noticeMessage || undefined, emphasis }) }>Error</button><br>
 	<br>
 
 	<p>Notice Label</p>
@@ -71,6 +72,6 @@
 	</select><br>
 	<!-- @js-expect-error -->
 	<button on:click={
-		() => logMessageParts(new_message, visual)
+		() => writeConsole(new_message, visual)
 	}>Append Visual Element</button>
 </div>

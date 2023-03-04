@@ -1,5 +1,8 @@
 <script lang="ts">
-	import type { TextualMessagePart } from "$lib/message";
+	import {
+		type TextualMessagePart,
+		isTextualMessage_HTML_UNCHECKED
+	} from "$lib/message";
 	export let part: TextualMessagePart;
 </script>
 
@@ -54,7 +57,9 @@
 </style>
 
 <div class="textual-message">
-	{#if typeof part.notice == "undefined" || part.notice == "none"}
+	{#if isTextualMessage_HTML_UNCHECKED(part)}
+		<p>{@html part.HTML_UNCHECKED}</p>
+	{:else if typeof part.notice == "undefined" || part.notice == "none"}
 		<p>{part.message}</p>
 	{:else}
 		<div class={"notice notice-type-"+part.notice} class:emphasis={part.emphasis}>
