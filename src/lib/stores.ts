@@ -12,7 +12,3 @@ export const _supibotCommandWritable = writable<string>('');
 export const supibotCommand: Readable<string> = {
 	subscribe: _supibotCommandWritable.subscribe,
 };
-
-/**
- * The
- */

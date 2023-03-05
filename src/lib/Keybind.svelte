@@ -38,6 +38,6 @@
 <svelte:window on:keydown={keydown} />
 {#if keybind != ""}
 	<strong class="keybind-definition">
-		[<span class="key mono" >{keybind}</span>]
+		[<span class="key mono">{keybind}</span>]
 	</strong>
 {/if}
