@@ -1,6 +1,7 @@
 
-import type { writeConsoleFn } from "$lib/message";
+import type { writeConsoleFn, MessagePart } from "$lib/message";
 import * as loginManager from './loginManager';
+import * as supibotCommand from './supibotCommand';
 import ErrorStackParser from 'error-stack-parser';
 
 
@@ -28,24 +29,35 @@ type ActionCtx = {
 /** The logical implementation of a debug command. */
 type Action = (ctx: ActionCtx) => Promise<void>;
 
+/** A flag for a debug command; Changes behaviour in some way. */
+type Flag =
+	| "dont-show-invocation"
+	;
+
+
 /** A debug command, for use in the debug console. */
 type DebugCommand = {
 	help_text: string;
 	help_invocation: string;
 	execute: Action;
+	flags?: Flag[];
 };
 
 const unimplemented: Action = async function debug_command__UNIMPLEMENTED(ctx) {
 	ctx.writeConsole(false, { message: 'Unimplemented!', notice: 'error' });
 };
-const needLogin: (a: Action) => Action = a => {
-	if (!loginManager.isLoggedIn()) return async function debug_command__NEEDS_LOGIN(ctx) {
-		ctx.writeConsole(false,
-			{ notice: 'error', message: `You must be logged in to do that.` }
-		);
-	};
 
-	return a;
+const needLogin: (a: Action) => Action = wrapped => {
+	return async function debug_command__NEEDS_LOGIN(ctx) {
+		if (!loginManager.isLoggedIn()) {
+			ctx.writeConsole(false,
+				{ notice: 'error', message: `You must be logged in to do that.` }
+			);
+			return;
+		}
+
+		wrapped(ctx);
+	};
 };
 
 let commands: { [x: string]: DebugCommand; } = {
@@ -84,25 +96,38 @@ let commands: { [x: string]: DebugCommand; } = {
 				headers: { "Content-Type": "application/json" }
 			});
 
-			let { data, error } = await resp.json();
+			let json = await resp.json();
 
-			if (error) {
-				ctx.writeConsole(false, { notice: 'error', emphasis: true, message: error.message ?? '(empty error message)' });
+			console.log('Raw /api/bot/command/run:', json);
+
+			if (json.error) {
+				ctx.writeConsole(false, { notice: 'error', emphasis: true, message: json.error.message ?? '(empty error message)' });
 				return;
 			}
 
-			ctx.writeConsole(false, { notice: 'info', noticeLabel: 'Supibot', message: data.reply ?? '(empty message)' });
+			ctx.writeConsole(false, { notice: 'info', noticeLabel: 'Supibot', message: json.data.reply ?? '(empty message)' });
 		})
 	},
-	parsed: {
-		help_invocation: 'parsed [command]',
+	parse: {
+		help_invocation: 'parse [command]',
 		help_text: 'Parse [command] or current command if not provided, and show internal representation. Useful to see if something is bugged.',
-		execute: unimplemented
+		execute: async function debug_command_parse(ctx) {
+			ctx.writeConsole(false,
+				{ message: 'Below is a hard-coded example of what a parsed command may look like:' },
+				"visual:dashed-horizontal-line",
+			);
+			let parsed = supibotCommand.parse(ctx.args.join(' '));
+			ctx.writeConsole(false,
+				{ message: JSON.stringify(parsed, undefined, 4) }
+			);
+		}
 	},
 	login: {
 		help_invocation: "login [<id> <auth>]",
 		help_text: "Login to the supinic.com API and store tokens in localStorage. Required to use most of the debugger.",
+		flags: ["dont-show-invocation"],
 		execute: async function debug_command_login(ctx) {
+			ctx.writeConsole(true, { message: "SVD> login" + (ctx.args.length ? ' [redacted]' : '') }, "visual:solid-horizontal-line wide");
 			if (ctx.args.length == 0) {
 				ctx.writeConsole(false,
 					{ message: "Usage: login <supibot user id> <API key>\nGo to https://supinic.com/user/auth-key to generate a key." }
@@ -123,7 +148,7 @@ let commands: { [x: string]: DebugCommand; } = {
 					{ message: `Username: ${user.username}\nSupibot ID: ${user.userid}` },
 				);
 			}
-		}
+		},
 	},
 	logout: {
 		help_invocation: "logout",
@@ -137,7 +162,7 @@ let commands: { [x: string]: DebugCommand; } = {
 
 export async function runDebugCommand(user_input: string, writeConsole: writeConsoleFn, clearConsole: () => void) {
 	let start = new Date().valueOf();
-	writeConsole(true, { message: "SVD> " + user_input }, "visual:solid-horizontal-line wide");
+	let rendered_invocation: MessagePart[] = [{ message: "SVD> " + user_input }, "visual:solid-horizontal-line wide"];
 
 	// Get command name separate from args
 	let [command_string, ...args] = user_input.split(' ');
@@ -151,22 +176,37 @@ export async function runDebugCommand(user_input: string, writeConsole: writeCon
 	let ctx: ActionCtx = { args, writeConsole: writeConsole, clearConsole };
 
 	if (!Object.hasOwn(commands, command_string)) {
-		writeConsole(false, { notice: "error", message: `Unknown debug command: "${command_string}"` });
+		writeConsole(true,
+			...rendered_invocation,
+			{ notice: "error", message: `Unknown debug command: "${command_string}"` }
+		);
 		return;
 	}
 
 	let command = commands[command_string];
+	if (!command.flags?.includes("dont-show-invocation"))
+		writeConsole(true, ...rendered_invocation);
+
 
 	try {
 		await command.execute(ctx);
 	} catch (e: any) {
-		const stack = ErrorStackParser.parse(e as Error).map(i => i.toString());
-		const lastLine = stack.findIndex(i => i.includes('runDebugCommand'));
-		const stack_str = stack.slice(0, lastLine).join('\n');
-		writeConsole(false,
-			"visual:solid-horizontal-line wide",
-			{ notice: 'error', noticeLabel: (e as Error).name, message: (e as Error).message + '\n\n' + stack_str }
-		);
+		console.error(`Error running command '${user_input}':`, e);
+
+		if (e instanceof Error) {
+			const stack = ErrorStackParser.parse(e).map(i => i.toString());
+			const lastLine = stack.findIndex(i => i.includes('runDebugCommand'));
+			const stack_str = stack.slice(0, lastLine).join('\n');
+			writeConsole(false,
+				"visual:solid-horizontal-line wide",
+				{ notice: 'error', emphasis: true, noticeLabel: e.name, message: e.message + '\n\n' + stack_str }
+			);
+		} else {
+			writeConsole(false,
+				"visual:solid-horizontal-line wide",
+				{ notice: 'error', emphasis: true, message: `Non-error object: JSON shown below.\n\n${JSON.stringify(e)}` }
+			);
+		}
 	} finally {
 		let end = new Date().valueOf();
 		let duration = (end - start);
@@ -178,5 +218,4 @@ export async function runDebugCommand(user_input: string, writeConsole: writeCon
 			);
 		}
 	}
-
 }
