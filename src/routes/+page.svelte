@@ -1,6 +1,6 @@
 <script lang="ts">
 	import Console from "$lib/console/Console.svelte";
-	import GitShaSVG, { gitSha, fullGitSha } from "$lib/GitShaSVG.svelte";
+	import GitShaSVG, { gitSha, gitHomepageHref, gitCommitPageHref } from "$lib/GitShaSVG.svelte";
 </script>
 
 <style>
@@ -66,13 +66,13 @@
 
 	<footer class="footer">
 		<span class="git-info">
-			<a href="//github.com/notnotquinn/supibot-visual-debugger" target="_blank" rel="noreferrer external">
+			<a href="{gitHomepageHref}" target="_blank" rel="noreferrer external">
 				<img src="/git-icon-white.svg" alt="Git VCS Logo" class="mono git-logo">
 			</a>
 
 			<GitShaSVG />
 
-			<a href="//github.com/notnotquinn/supibot-visual-debugger/tree/{fullGitSha}"
+			<a href="{gitCommitPageHref}"
 				class="mono"
 				target="_blank"
 				rel="noreferrer external">

@@ -4,6 +4,10 @@
 	// @ts-expect-error
 	import { sha } from '~build/info';
 
+	// Data defined in vite.config.ts
+	// @ts-expect-error
+	import { gitHomepage, gitCommitPageTemplate } from '~build/meta';
+
 	// Do not use alpha channel:
 	// makes things too dank to deal with
 
@@ -11,8 +15,10 @@
 	export const gitSha: string = sha.slice(0,6);
 	/** Git SHA rendered as a CSS colour. */
 	export const gitShaColour = '#'+gitSha;
-	/** Git SHA (not truncated). */
-	export const fullGitSha = sha;
+	/** Project git homepage */
+	export const gitHomepageHref = (gitHomepage as string);
+	/** Project specific page to view this commit's source. */
+	export const gitCommitPageHref = (gitCommitPageTemplate as string).replace("%commit.sha%", sha);
 </script>
 
 <style>

@@ -6,14 +6,17 @@ export default defineConfig({
 	plugins: [
 		// Implements svelte compiling
 		sveltekit(),
-		// Implements vitual modules starting with `~build/`
+		// Implements virtual modules starting with `~build/`
 		// Including:
 		//   - `~build/time`: Build date+time (DO NOT USE)
 		//   - `~build/info`: Build info (git)
 		//   - `~build/meta`: Custom information
 		//   - `~build/package`: package.json information
 		BuildInfo({
-			github: 'https://github.com/notnotquinn/supibot-visual-debugger'
+			meta: {
+				gitHomepage: '//github.com/notnotquinn/supibot-visual-debugger',
+				gitCommitPageTemplate: '//github.com/notnotquinn/supibot-visual-debugger/tree/%commit.sha%'
+			}
 		}),
 	]
 });
