@@ -3,6 +3,8 @@ import type { writeConsoleFn, MessagePart } from "$lib/message";
 import * as loginManager from './loginManager';
 import * as supibotCommand from './supibotCommand';
 import ErrorStackParser from 'error-stack-parser';
+import { supibotCommand as supibotCommandStore } from '../stores';
+import { get } from 'svelte/store';
 
 
 // h                 : Show help
@@ -22,6 +24,7 @@ import ErrorStackParser from 'error-stack-parser';
 /** Context passed to a debug command's implementation. */
 type ActionCtx = {
 	args: string[];
+	currentSupibotCommand: string;
 	writeConsole: writeConsoleFn;
 	clearConsole: () => void;
 };
@@ -112,11 +115,20 @@ let commands: { [x: string]: DebugCommand; } = {
 		help_invocation: 'parse [command]',
 		help_text: 'Parse [command] or current command if not provided, and show internal representation. Useful to see if something is bugged.',
 		execute: async function debug_command_parse(ctx) {
-			ctx.writeConsole(false,
-				{ message: 'Below is a hard-coded example of what a parsed command may look like:' },
-				"visual:dashed-horizontal-line",
-			);
-			let parsed = supibotCommand.parse(ctx.args.join(' '));
+			let invocation: string;
+			let args: string[];
+
+			if (ctx.args.length == 0) {
+				[invocation, ...args] = ctx.currentSupibotCommand.split(' ').filter(Boolean);
+			} else {
+				[invocation, ...args] = ctx.args;
+			}
+
+			if (!invocation.startsWith('$') || invocation == "$") {
+				throw new Error("Command string must include prefix.");
+			}
+
+			let parsed = await supibotCommand.parse(invocation.slice(1), args);
 			ctx.writeConsole(false,
 				{ message: JSON.stringify(parsed, undefined, 4) }
 			);
@@ -165,7 +177,7 @@ export async function runDebugCommand(user_input: string, writeConsole: writeCon
 	let rendered_invocation: MessagePart[] = [{ message: "SVD> " + user_input }, "visual:solid-horizontal-line wide"];
 
 	// Get command name separate from args
-	let [command_string, ...args] = user_input.split(' ');
+	let [command_string, ...args] = user_input.split(' ').filter(Boolean);
 
 	// Special case: '$' prefixed text
 	if (command_string.length > 1 && command_string.startsWith('$')) {
@@ -173,7 +185,12 @@ export async function runDebugCommand(user_input: string, writeConsole: writeCon
 		command_string = '$';
 	}
 
-	let ctx: ActionCtx = { args, writeConsole: writeConsole, clearConsole };
+	let ctx: ActionCtx = {
+		writeConsole,
+		clearConsole,
+		currentSupibotCommand: get(supibotCommandStore),
+		args,
+	};
 
 	if (!Object.hasOwn(commands, command_string)) {
 		writeConsole(true,
@@ -184,8 +201,9 @@ export async function runDebugCommand(user_input: string, writeConsole: writeCon
 	}
 
 	let command = commands[command_string];
-	if (!command.flags?.includes("dont-show-invocation"))
+	if (!command.flags?.includes("dont-show-invocation")) {
 		writeConsole(true, ...rendered_invocation);
+	}
 
 
 	try {

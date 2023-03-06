@@ -82,7 +82,7 @@ export async function tryLogin(supibot_user_id: string, supinic_com_api_key: str
 	// Successfully logged in!
 
 	// Resolve username for display.
-	let resolveUserResp = await fetch(`https://supinic.com/api/bot/user/resolve/ID/${auth.userid}`);
+	let resolveUserResp = await fetch(`https://supinic.com/api/bot/user/resolve/ID/${encodeURIComponent(auth.userid)}`);
 	if (resolveUserResp.status !== 200)
 		throw new Error(`Could not fetch username: HTTP ${resolveUserResp.status}: ${resolveUserResp.statusText}`);
 
