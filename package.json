@@ -2,6 +2,7 @@
 	"name": "supibot-visual-debugger",
 	"version": "0.0.1",
 	"private": true,
+	"license": "AGPL",
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build",
@@ -22,6 +23,7 @@
 	},
 	"type": "module",
 	"dependencies": {
-		"error-stack-parser": "^2.1.4"
+		"error-stack-parser": "^2.1.4",
+		"language-iso-codes": "github:notnotquinn/language-iso-codes#patch-1"
 	}
 }
