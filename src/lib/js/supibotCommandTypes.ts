@@ -79,23 +79,33 @@ export type AnyCommand =
 	| GenericSupibotCommand
 	;
 
+/** Describes a bare-bones command. */
+export type BasicCommandDescriptor = {
+	/** The command invoked. */
+	invocation: string;
+	/** The arguments passed to the command. */
+	arguments: string[];
+};
+
 /**
  * Data about an alias invocation.
  */
 export type AliasInvocationData = {
-	/** The alias' arguments applied in context and resulting command string parsed. */
-	replacedAndParsed: AnyCommand;
+	/** A command equivalent to the alias invocation. */
+	commandEquivalent: {
+		/** Textual command equivalent. */
+		unparsed: BasicCommandDescriptor;
+		/** Parsed command equivalent. */
+		parsed: AnyCommand;
+	};
 	/** The user the alias is attached to. Not necessarily the person who made it. */
 	aliasUser: string;
 	/** The name of the alias. */
 	aliasName: string;
-	/** The definition of the alias. */
-	aliasDefinition: {
-		/** The equivalent command name. */
-		invocation: string;
-		/** The source arguments of the alias. Including any unresolved replacements, such as `${0+}` or `${executor}` */
-		arguments: string[];
-	};
+	/** Arguments input to the alias. Ex: `"foo bar"` in `"$$fish foo bar"` */
+	aliasInput: string[];
+	/** The definition of the alias. Includes any alias 'parameters' aka replacements. Ex: "abb say ${0+}" */
+	aliasDefinition: BasicCommandDescriptor;
 };
 
 /**

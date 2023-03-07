@@ -159,6 +159,7 @@ let commands: { [x: string]: DebugCommand; } = {
 		help_text: "Login to the supinic.com API and store tokens in localStorage. Required to use most of the debugger.",
 		flags: ["dont-show-invocation"],
 		execute: async function debug_command_login(ctx) {
+			ctx.dbg_begin_message();
 			ctx.dbg_log({ message: "SVD> login" + (ctx.args.length ? ' [redacted]' : '') }, "visual:solid-horizontal-line wide");
 			if (ctx.args.length == 0) {
 				ctx.dbg_log({ message: "Usage: login <supibot user id> <API key>\nGo to https://supinic.com/user/auth-key to generate a key." });

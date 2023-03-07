@@ -1,10 +1,13 @@
 import { browser } from '$app/environment';
 import { parseParametersFromArguments } from './supibot-browser/command';
 import type { Parameter } from './supibot-browser/command';
+import * as loginManager from './loginManager';
+import { applyParameters } from './supibot-browser/alias';
 
 import type {
 	SupibotCommandDetail,
 	emptyObject,
+	BasicCommandDescriptor,
 	AnyCommand,
 	// $alias
 	AliasInvocation,
@@ -166,7 +169,115 @@ async function parse_pipe_command(cmd: Exclude<PipeCommand, "data">): Promise<Pi
 	return { subcommands };
 };
 
-function parse_alias_invocation_command(cmd: Exclude<AliasInvocation, "data">): AliasInvocationData {
-	return null as unknown as AliasInvocationData;
+export class SupibotCommandParserError extends Error { };
+function commandString(cmd: AnyCommand): string {
+	return '$' + cmd.invocation + ' ' + cmd.rawArguments.join(' ');
 }
 
+async function parse_alias_invocation_command(cmd: Exclude<AliasInvocation, "data">): Promise<AliasInvocationData> {
+	let aliasUser: string;
+	let aliasName: string;
+	let aliasInput: string[];
+
+	let current_user = loginManager.fetch_user();
+	if (cmd.interpretedArguments.length < 1) {
+		// not enough args
+		throw new SupibotCommandParserError(`Malformed '$alias' invocation: not enough args: '${commandString(cmd)}'`);
+	} else if (cmd.invocation == '$') {
+		// Ex: $$ fish foo bar
+		//     || ~0~~ ~1+~~~~>
+		//     || |    ^ [1+] arguments
+		//     || ^ [0] alias name
+		//     |^ command
+		//     ^ prefix
+		aliasUser = current_user.username;
+		aliasName = cmd.interpretedArguments[0];
+		aliasInput = cmd.interpretedArguments.slice(1);
+	} else if (cmd.interpretedArguments.length < 2) {
+		// not enough args
+		throw new SupibotCommandParserError(`Malformed '$alias' invocation: not enough args: '${commandString(cmd)}'`);
+	} else if (cmd.interpretedArguments[0] == "run") {
+		// Ex: $alias run fish foo bar
+		//     |~~~~~ ~0~ ~1~~ ~2+~~~~>
+		//     ||     |   |    ^ [2+] arguments
+		//     ||     |   ^ [1] alias name
+		//     ||     ^ [0] 'run' subcommand
+		//     |^ command
+		//     ^ prefix
+		aliasUser = current_user.username;
+		aliasName = cmd.interpretedArguments[1];
+		aliasInput = cmd.interpretedArguments.slice(2);
+	} else if (cmd.interpretedArguments.length < 3) {
+		// not enough args
+		throw new SupibotCommandParserError(`Malformed '$alias' invocation: not enough args: '${commandString(cmd)}'`);
+	} else if (cmd.interpretedArguments[0] == "try") {
+		// Ex: $alias try brin____ fish foo bar
+		//     |~~~~~ ~0~ ~1~~~~~~ ~2~~ ~3+~~~~>
+		//     ||     |   |        |     ^ [3+] arguments
+		//     ||     |   |        ^ [2] alias name
+		//     ||     |   ^ [1] username
+		//     ||     ^ [0] 'try' subcommand
+		//     |^ command
+		//     ^ prefix
+		aliasUser = cmd.interpretedArguments[1];
+		aliasName = cmd.interpretedArguments[2];
+		aliasInput = cmd.interpretedArguments.slice(3);
+	} else {
+		// Ex: $alias foo bar dank
+		// and somehow this fn gets called; probably not possible
+		throw new SupibotCommandParserError(`Malformed '$alias' invocation: not an invocation: '${commandString(cmd)}'`);
+	}
+
+	// Static alias definition, Eg: "$abb say --> ${0+} <--"
+	let alias = await resolve_alias(aliasUser, aliasName);
+
+	// Instanced command equivalent of the alias, Ex: "$abb say --> foo bar <--"
+	let replaced_arguments = applyParameters(current_user.username, undefined, alias.arguments, aliasInput);
+
+	return {
+		commandEquivalent: {
+			unparsed: {
+				invocation: alias.invocation,
+				arguments: replaced_arguments,
+			},
+			parsed: await parse(alias.invocation, replaced_arguments)
+		},
+		aliasUser,
+		aliasName,
+		aliasInput,
+		aliasDefinition: alias,
+	};
+}
+
+
+async function resolve_alias(aliasUser: string, aliasName: string): Promise<BasicCommandDescriptor> {
+	if (!browser) return { invocation: 'abb', arguments: "say SSR is dank FeelsDankMan IF YOU SEE THIS IN BROWSER VI VON".split(' ') };
+
+	// Check session cache
+	let cache_key = `cached_supibot_alias_user:${aliasUser}_alias:${aliasName}`;
+	let cached_alias: BasicCommandDescriptor | null = JSON.parse(
+		sessionStorage.getItem(cache_key) ?? 'null'
+	);
+	if (cached_alias) return cached_alias;
+
+	// Download command detail
+	let resp = await fetch(`https://supinic.com/api/bot/user/${encodeURIComponent(aliasUser)}/alias/detail/${encodeURIComponent(aliasName)}`);
+	let json: { error: any; data: any; } = await resp.json();
+
+	if (json.error) {
+		throw new Error(`Cannot fetch alias "${aliasName}" (user: ${aliasUser}) detail: HTTP ${resp.status}: ${json.error.message}`);
+	}
+
+	let resolved: BasicCommandDescriptor;
+	if (json.data.linkAuthor !== null && json.data.linkName !== null) {
+		// recurse once: guaranteed no links to links
+		resolved = await resolve_alias(json.data.linkAuthor, json.data.linkName);
+	} else {
+		resolved = { invocation: json.data.invocation, arguments: json.data.arguments };
+	}
+
+
+	// Cache and return result
+	sessionStorage.setItem(cache_key, JSON.stringify(resolved));
+	return resolved;
+}
