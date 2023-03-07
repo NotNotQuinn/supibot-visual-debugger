@@ -16,18 +16,15 @@
 	import ConsoleSidebar from "$lib/console/ConsoleSidebar.svelte";
 	import ConsoleMessageList from '$lib/console/ConsoleMessageList.svelte';
 
-	let messages: Array<MessagePart>[] = [
-		[
-			{message:`This is Supibot Visual Debugger v0.0.1`}
-		]
-	];
+	let messages: Array<MessagePart>[] = [[{ message:`This is Supibot Visual Debugger v0.0.1` }]];
 
-	onMount(async () => {
-		let { username, userid } = await loginManager.fetch_user();
+	onMount(() => {
+		let { username, userid } = loginManager.fetch_user();
 		writeConsole(false,
-		"visual:solid-horizontal-line wide",
-		{ notice: 'info', message: loginManager.isLoggedIn() ? `Logged in as: ${username} (ID: ${userid})` : 'You are not logged in.' }
-	)});
+			"visual:solid-horizontal-line wide",
+			{ notice: 'info', message: loginManager.isLoggedIn() ? `Logged in as: ${username} (ID: ${userid})` : 'You are not logged in.' }
+		)
+	});
 
 	function intakeDebugCommand({ detail: user_input }: CustomEvent<string>) {
 		runDebugCommand(user_input, writeConsole, () => { messages = []; });
