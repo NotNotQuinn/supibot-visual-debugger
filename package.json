@@ -24,6 +24,6 @@
 	"type": "module",
 	"dependencies": {
 		"error-stack-parser": "^2.1.4",
-		"language-iso-codes": "github:notnotquinn/language-iso-codes#patch-1"
+		"language-iso-codes": "github:supinic/language-iso-codes"
 	}
 }
