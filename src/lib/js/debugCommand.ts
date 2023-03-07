@@ -20,14 +20,25 @@ import { get } from 'svelte/store';
 // If there get too many commands, i.e. the help gets unruly to read,
 // then separate them into groups, and have the groups be colour coded.
 
-
 /** Context passed to a debug command's implementation. */
-type ActionCtx = {
+type ActionCtx = Readonly<{
+	/** Debug CLI arguments */
 	args: string[];
-	currentSupibotCommand: string;
-	writeConsole: writeConsoleFn;
-	clearConsole: () => void;
-};
+	/** The current supibot command string, as of when the command was invoked. */
+	current_supibot_command: string;
+
+	/** The message displaying the command that was just typed. */
+	rendered_invocation_text: MessagePart[];
+	/** The usage text built from basic help information. */
+	rendered_usage_text: MessagePart[];
+
+	/** Creates a new (empty) message. */
+	dbg_begin_message: () => void;
+	/** Appends parts to the most recent message. */
+	dbg_log: (...parts: MessagePart[]) => void;
+	/** Clears ALL messages. */
+	dbg_clear: () => void;
+}>;
 
 /** The logical implementation of a debug command. */
 type Action = (ctx: ActionCtx) => Promise<void>;
@@ -47,15 +58,13 @@ type DebugCommand = {
 };
 
 const unimplemented: Action = async function debug_command__UNIMPLEMENTED(ctx) {
-	ctx.writeConsole(false, { message: 'Unimplemented!', notice: 'error' });
+	ctx.dbg_log({ message: 'Unimplemented!', notice: 'error' });
 };
 
 const needLogin: (a: Action) => Action = wrapped => {
 	return async function debug_command__NEEDS_LOGIN(ctx) {
 		if (!loginManager.isLoggedIn()) {
-			ctx.writeConsole(false,
-				{ notice: 'error', message: `You must be logged in to do that.` }
-			);
+			ctx.dbg_log({ notice: 'error', message: `You must be logged in to do that.` });
 			return;
 		}
 
@@ -72,11 +81,14 @@ let commands: { [x: string]: DebugCommand; } = {
 			let max_len = Math.max(...command_objs.map(i => i.help_invocation.length)) + 1;
 
 			for (const command of command_objs) {
-				ctx.writeConsole(false, {
-					notice: 'notice',
-					message: command.help_text,
-					noticeLabel: (command.help_invocation + (" ".repeat(max_len))).slice(0, max_len)
-				}, "visual:dashed-horizontal-line");
+				ctx.dbg_log(
+					{
+						notice: 'notice',
+						noticeLabel: (command.help_invocation + (" ".repeat(max_len))).slice(0, max_len),
+						message: command.help_text,
+					},
+					"visual:dashed-horizontal-line"
+				);
 			}
 		}
 	},
@@ -84,7 +96,7 @@ let commands: { [x: string]: DebugCommand; } = {
 		help_invocation: 'clear',
 		help_text: 'Delete all messages.',
 		execute: async function debug_command_clear(ctx) {
-			ctx.clearConsole();
+			ctx.dbg_clear();
 		}
 	},
 	$: {
@@ -104,11 +116,11 @@ let commands: { [x: string]: DebugCommand; } = {
 			console.log('Raw /api/bot/command/run:', json);
 
 			if (json.error) {
-				ctx.writeConsole(false, { notice: 'error', emphasis: true, message: json.error.message ?? '(empty error message)' });
+				ctx.dbg_log({ notice: 'error', emphasis: true, message: json.error.message ?? '(empty error message)' });
 				return;
 			}
 
-			ctx.writeConsole(false, { notice: 'info', noticeLabel: 'Supibot', message: json.data.reply ?? '(empty message)' });
+			ctx.dbg_log({ notice: 'info', noticeLabel: 'Supibot', message: json.data.reply ?? '(empty message)' });
 		})
 	},
 	parse: {
@@ -119,9 +131,19 @@ let commands: { [x: string]: DebugCommand; } = {
 			let args: string[];
 
 			if (ctx.args.length == 0) {
-				[invocation, ...args] = ctx.currentSupibotCommand.split(' ').filter(Boolean);
+				[invocation, ...args] = ctx.current_supibot_command.split(' ').filter(Boolean);
 			} else {
 				[invocation, ...args] = ctx.args;
+			}
+
+			if (!invocation) {
+				ctx.dbg_log(
+					{ notice: 'error', message: 'No command found! Checked: [text-box, cli]' },
+					"visual:dashed-horizontal-line"
+				);
+
+				ctx.dbg_log(...ctx.rendered_usage_text);
+				return;
 			}
 
 			if (!invocation.startsWith('$') || invocation == "$") {
@@ -129,9 +151,7 @@ let commands: { [x: string]: DebugCommand; } = {
 			}
 
 			let parsed = await supibotCommand.parse(invocation.slice(1), args);
-			ctx.writeConsole(false,
-				{ message: JSON.stringify(parsed, undefined, 4) }
-			);
+			ctx.dbg_log({ message: JSON.stringify(parsed, undefined, 4) });
 		}
 	},
 	login: {
@@ -139,11 +159,9 @@ let commands: { [x: string]: DebugCommand; } = {
 		help_text: "Login to the supinic.com API and store tokens in localStorage. Required to use most of the debugger.",
 		flags: ["dont-show-invocation"],
 		execute: async function debug_command_login(ctx) {
-			ctx.writeConsole(true, { message: "SVD> login" + (ctx.args.length ? ' [redacted]' : '') }, "visual:solid-horizontal-line wide");
+			ctx.dbg_log({ message: "SVD> login" + (ctx.args.length ? ' [redacted]' : '') }, "visual:solid-horizontal-line wide");
 			if (ctx.args.length == 0) {
-				ctx.writeConsole(false,
-					{ message: "Usage: login <supibot user id> <API key>\nGo to https://supinic.com/user/auth-key to generate a key." }
-				);
+				ctx.dbg_log({ message: "Usage: login <supibot user id> <API key>\nGo to https://supinic.com/user/auth-key to generate a key." });
 				return;
 			}
 			const [uid, key] = ctx.args;
@@ -151,10 +169,10 @@ let commands: { [x: string]: DebugCommand; } = {
 			let success = await loginManager.tryLogin(uid, key);
 
 			if (!success) {
-				ctx.writeConsole(false, { notice: 'error', emphasis: /* if not now, when? */ true, message: 'Invalid credentials.' });
+				ctx.dbg_log({ notice: 'error', emphasis: /* if not now, when? */ true, message: 'Invalid credentials.' });
 			} else {
 				let user = loginManager.fetch_user();
-				ctx.writeConsole(false,
+				ctx.dbg_log(
 					{ message: `Logged in successfully.` },
 					"visual:dotted-horizontal-line",
 					{ message: `Username: ${user.username}\nSupibot ID: ${user.userid}` },
@@ -167,7 +185,7 @@ let commands: { [x: string]: DebugCommand; } = {
 		help_text: "Logout of the supinic.com API.",
 		execute: async function debug_command_logout(ctx) {
 			loginManager.logout();
-			ctx.writeConsole(false, { message: "Logged out successfully." });
+			ctx.dbg_log({ message: "Logged out successfully." });
 		}
 	}
 };
@@ -185,13 +203,7 @@ export async function runDebugCommand(user_input: string, writeConsole: writeCon
 		command_string = '$';
 	}
 
-	let ctx: ActionCtx = {
-		writeConsole,
-		clearConsole,
-		currentSupibotCommand: get(supibotCommandStore),
-		args,
-	};
-
+	// Get command
 	if (!Object.hasOwn(commands, command_string)) {
 		writeConsole(true,
 			...rendered_invocation,
@@ -200,15 +212,32 @@ export async function runDebugCommand(user_input: string, writeConsole: writeCon
 		return;
 	}
 
+	// Start command "execution"
 	let command = commands[command_string];
 	if (!command.flags?.includes("dont-show-invocation")) {
 		writeConsole(true, ...rendered_invocation);
 	}
 
+	// Load/Generate contextual data
+	let ctx: ActionCtx = {
+		// Variable data
+		args,
+		current_supibot_command: get(supibotCommandStore),
+		rendered_invocation_text: rendered_invocation,
+		// Constant data
+		rendered_usage_text: [{ message: `Usage: ${command.help_invocation}\n${command.help_text}` }],
+		// Functions
+		dbg_begin_message: () => writeConsole(true),
+		dbg_log: (...p: MessagePart[]) => writeConsole(false, ...p),
+		dbg_clear: clearConsole,
+	};
 
+	// Execute!
 	try {
+		// Errors are planned.
 		await command.execute(ctx);
 	} catch (e: any) {
+		// In case error handling goes wrong in some way - there is still a log somewhere.
 		console.error(`Error running command '${user_input}':`, e);
 
 		if (e instanceof Error) {
@@ -226,10 +255,14 @@ export async function runDebugCommand(user_input: string, writeConsole: writeCon
 			);
 		}
 	} finally {
+		// Show how long a command takes - but only if it is "long enough".
+		// Right now that means 2.5 seconds.
+		const min_duration = 2500;
+
 		let end = new Date().valueOf();
 		let duration = (end - start);
 
-		if (duration >= 2500) {
+		if (duration >= min_duration) {
 			writeConsole(false,
 				"visual:solid-horizontal-line wide",
 				{ notice: 'info', message: `Command finished in ${(duration / 1000).toFixed(2)}s` },
