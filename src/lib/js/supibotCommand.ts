@@ -232,15 +232,19 @@ async function parse_alias_invocation_command(cmd: Exclude<AliasInvocation, "dat
 	let alias = await resolve_alias(aliasUser, aliasName);
 
 	// Instanced command equivalent of the alias, Ex: "$abb say --> foo bar <--"
-	let replaced_arguments = applyParameters(current_user.username, undefined, alias.arguments, aliasInput);
+	let replaced = applyParameters(current_user.username, undefined, alias.arguments, aliasInput);
+
+	if (!replaced.success) {
+		throw new Error(`Malformed '$alias' definition: alias "${aliasName}" (user: ${aliasUser}): ${replaced.reply}`);
+	}
 
 	return {
 		commandEquivalent: {
 			unparsed: {
 				invocation: alias.invocation,
-				arguments: replaced_arguments,
+				arguments: replaced.resultArguments,
 			},
-			parsed: await parse(alias.invocation, replaced_arguments)
+			parsed: await parse(alias.invocation, replaced.resultArguments)
 		},
 		aliasUser,
 		aliasName,
