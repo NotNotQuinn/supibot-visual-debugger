@@ -4,7 +4,7 @@ import { type Readable, writable } from "svelte/store";
  * Used only to bind the supibot command to the input.
  * Use `supibotCommand` instead, for almost all cases.
  */
-export const _supibotCommandWritable = writable<string>('');
+export const _supibotCommandWritable = writable<string>('$pipe ping | shuffle | tt smol');
 
 /**
  * Stores the current supibot command text - raw from the input.
