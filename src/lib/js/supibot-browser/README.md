@@ -1,4 +1,4 @@
-# supi-core-browser
+# supibot-browser
 
 This folder holds potentially modified copy-pasted code form
 [`supi-core`](https://github.com/supinic/supi-core), and
@@ -16,6 +16,9 @@ Its a whole lot easier in the future to update it if we simply copy an entire fu
 Each file in this folder should start with a comment listing where the code is from,
 a permalink to the commit, and what _specifically_ was changed about the code, if anything.
 
+Using `@edited` and `@/edited` is also good idea to note specifically what code has been touched, and what
+hasn't. This is all based on the idea that someone may need to update this with 1y+ of changes at once.
+
 Example: `Command.ts`
 ```ts
 /*
@@ -26,11 +29,22 @@ source: ... the more links the better
 Changes:
 
 - Merged/Converted to typescript file.
+- Changes denoted using @edited inline.
 - Cherry-picked functions required (foo, bar)
 	- Changes to `bar` function: none, works fine.
 	- Changes to `foo` function:
 		- Changed references to `node-abc` to browser equivalents.
 */
+
+// ...
+
+// https:// link to foo class definition with commit (not a branch!) #L{LINE NUMBER}
+class Foo {
+	// @edited Typescript doesn't like the original implementation, updated to work using typescript.
+	/* ... code ... */
+	Xd: string = "foo";
+	// @/edited
+}
 ```
 
 ## License information
