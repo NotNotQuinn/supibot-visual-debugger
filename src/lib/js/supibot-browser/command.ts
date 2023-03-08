@@ -245,7 +245,9 @@ function parseParameter(value: string, type: Parameter.Type, explicit: boolean) 
 		return parseRegExp(value);
 	}
 	else if (type === "language") {
+		// @edited Module was a part of sb.Utils, not separate.
 		return languageISO.getLanguage(value);
+		// @/edited
 	}
 
 	return null;
