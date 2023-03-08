@@ -157,6 +157,7 @@ async function parse_pipe_command(cmd: Exclude<PipeCommand, "data">): Promise<Pi
 	let subcommands: PipeCommandData["subcommands"] = [];
 	for (const inv of invocations) {
 		let [invocation, ...args] = inv.split(' ').filter(Boolean);
+		// TODO: If any of these are the first invocation in a pipe, we can parse them properly.
 		if (invocation == "pipe" || invocation === "$" || invocation === "alias") {
 			// Run-time generated alias data
 			// Unfortunately, all aliases which receive runtime arguments
@@ -167,6 +168,7 @@ async function parse_pipe_command(cmd: Exclude<PipeCommand, "data">): Promise<Pi
 			//
 			// Detecting `$pipe null | pipe`, `$pipe null | alias`, or equivalents is going to be too gigadank, even for me.
 			// The cost of doing it this way isn't that much.
+
 			subcommands.push({
 				unparsed: {
 					invocation: invocation,
