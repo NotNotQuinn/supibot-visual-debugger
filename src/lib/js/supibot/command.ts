@@ -158,6 +158,7 @@ async function parse_pipe_command(cmd: Exclude<PipeCommand, "data">): Promise<Pi
 	for (const inv of invocations) {
 		let [invocation, ...args] = inv.split(' ').filter(Boolean);
 		// TODO: If any of these are the first invocation in a pipe, we can parse them properly.
+		// TODO: ??? maybe analyze if an alias would be context-independent. i.e. only uses ${executor} or ${channel} but not ${N} or ${N..N} or ${N+} or ${N-N} or ${-N..N} or ${-N+}
 		if (invocation == "pipe" || invocation === "$" || invocation === "alias") {
 			// Run-time generated alias data
 			// Unfortunately, all aliases which receive runtime arguments
