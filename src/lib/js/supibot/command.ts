@@ -269,13 +269,6 @@ async function parse_alias_invocation_command(cmd: Exclude<AliasInvocation, "dat
 async function resolve_alias(aliasUser: string, aliasName: string): Promise<BasicCommandDescriptor> {
 	if (!browser) return { invocation: 'abb', arguments: "say SSR is dank FeelsDankMan IF YOU SEE THIS IN BROWSER VI VON".split(' ') };
 
-	// Check session cache
-	let cache_key = `cached_supibot_alias_user:${aliasUser}_alias:${aliasName}`;
-	let cached_alias: BasicCommandDescriptor | null = JSON.parse(
-		sessionStorage.getItem(cache_key) ?? 'null'
-	);
-	if (cached_alias) return cached_alias;
-
 	// Download command detail
 	let resp = await fetch(`https://supinic.com/api/bot/user/${encodeURIComponent(aliasUser)}/alias/detail/${encodeURIComponent(aliasName)}`);
 	let json: { error: any; data: any; } = await resp.json();
@@ -292,8 +285,6 @@ async function resolve_alias(aliasUser: string, aliasName: string): Promise<Basi
 		resolved = { invocation: json.data.invocation, arguments: json.data.arguments };
 	}
 
-
-	// Cache and return result
-	sessionStorage.setItem(cache_key, JSON.stringify(resolved));
+	// Return result
 	return resolved;
 }

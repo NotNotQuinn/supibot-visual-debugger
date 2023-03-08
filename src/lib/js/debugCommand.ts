@@ -53,8 +53,8 @@ type Flag =
 type DebugCommand = {
 	help_text: string;
 	help_invocation: string;
-	execute: Action;
 	flags?: Flag[];
+	execute: Action;
 };
 
 const unimplemented: Action = async function debug_command__UNIMPLEMENTED(ctx) {
@@ -138,7 +138,7 @@ let commands: { [x: string]: DebugCommand; } = {
 
 			if (!invocation) {
 				ctx.dbg_log(
-					{ notice: 'error', message: 'No command found! Checked: [text-box, cli]' },
+					{ notice: 'error', message: 'No command in the textbox.' },
 					"visual:dashed-horizontal-line"
 				);
 
@@ -188,7 +188,7 @@ let commands: { [x: string]: DebugCommand; } = {
 			loginManager.logout();
 			ctx.dbg_log({ message: "Logged out successfully." });
 		}
-	}
+	},
 };
 
 export async function runDebugCommand(user_input: string, writeConsole: writeConsoleFn, clearConsole: () => void) {
