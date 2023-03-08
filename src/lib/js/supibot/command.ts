@@ -92,6 +92,9 @@ export async function parse(invocation: string, args: string[]): Promise<AnyComm
 		invocation = '$';
 	}
 
+	// Filter empty strings
+	args = args.filter(Boolean);
+
 	let commandInfo = await fetchCommandDetail<Record<string, Parameter.Type>>(invocation);
 
 	let descriptors: Parameter.Descriptor[] = [];
@@ -154,15 +157,22 @@ async function parse_pipe_command(cmd: Exclude<PipeCommand, "data">): Promise<Pi
 	let subcommands: PipeCommandData["subcommands"] = [];
 	for (const inv of invocations) {
 		let [invocation, ...args] = inv.split(' ').filter(Boolean);
-		if (invocation == "pipe") {
-			// Run-time generated pipe data
-
+		if (invocation == "pipe" || invocation === "$" || invocation === "alias") {
+			// Run-time generated alias data
+			// Unfortunately, all aliases which receive runtime arguments
+			// MUST be compiled at run time, after those arguments are known.
+			// _Even if_ those arguments don't influence which alias will be invoked.
+			//
+			// Any pipe which receives runtime arguments follows the same logic.
+			//
+			// Detecting `$pipe null | pipe`, `$pipe null | alias`, or equivalents is going to be too gigadank, even for me.
+			// The cost of doing it this way isn't that much.
 			subcommands.push({
 				unparsed: {
-					invocation: "pipe",
+					invocation: invocation,
 					args: args
 				},
-				parsed: null
+				parsed: "runtime-only"
 			});
 		} else {
 			// Compile-time pipe data
@@ -174,7 +184,6 @@ async function parse_pipe_command(cmd: Exclude<PipeCommand, "data">): Promise<Pi
 				},
 				parsed: await parse(invocation, args)
 			});
-
 		}
 	}
 
@@ -185,6 +194,10 @@ export class SupibotCommandParserError extends Error { };
 function commandString(cmd: AnyCommand): string {
 	return '$' + cmd.invocation + ' ' + cmd.rawArguments.join(' ');
 }
+
+// WAIT A HOT SEC!
+// PIPING ANYTHING INTO ALIAS CAUSES IT TO NEED TO BE RE-PARSED
+// !!!
 
 async function parse_alias_invocation_command(cmd: Exclude<AliasInvocation, "data">): Promise<AliasInvocationData> {
 	let aliasUser: string;

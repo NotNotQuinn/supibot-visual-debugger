@@ -75,6 +75,15 @@ export interface GenericSupibotCommand<CommandInfo extends {
 
 /**
  * Any supibot command.
+ *
+ * In terms of """classical""" programming languages, this is the lexical tokens.
+ * NOT the abstract syntax tree! (AST)
+ *
+ * The AST represents "meaning", this only represents what was written (with a lot of extra meta-data).
+ *
+ * The AST would not care if a command is in an alias or written out explicitly,
+ * it would /only/ contain the information that matters for executing the commands,
+ * and not how the information was expressed.
  */
 export type AnyCommand =
 	| AliasInvocation
@@ -133,10 +142,10 @@ export type PipeCommandData = {
 		parsed: AnyCommand;
 	} | {
 		unparsed: {
-			invocation: "pipe";
+			invocation: "pipe" | "alias" | "$";
 			args: string[];
 		},
-		parsed: null;
+		parsed: "runtime-only";
 	})[];
 };
 
