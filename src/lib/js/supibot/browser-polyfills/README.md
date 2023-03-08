@@ -1,9 +1,12 @@
-# supibot-browser
+# supibot-browser-polyfills
 
 This folder holds potentially modified copy-pasted code form
 [`supi-core`](https://github.com/supinic/supi-core), and
 [`supibot`](https://github.com/supinic/supibot) repositories
 that is needed to parse supibot commands properly.
+
+Note that the API for these functions aren't necessarily the same
+as in supibot's original codebase.
 
 ## Documenting source
 

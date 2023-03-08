@@ -1,4 +1,7 @@
-import type { Parameter, Language } from './supibot-browser/command';
+import type {
+	Parameter,
+	Language,
+} from './browser-polyfills';
 
 /** Maps parameter type names to types. */
 type ParameterTypeMapping = {

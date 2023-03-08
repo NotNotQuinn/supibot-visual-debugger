@@ -1,8 +1,11 @@
 import { browser } from '$app/environment';
-import { parseParametersFromArguments } from './supibot-browser/command';
-import type { Parameter } from './supibot-browser/command';
-import * as loginManager from './loginManager';
-import { applyParameters } from './supibot-browser/alias';
+import * as loginManager from '../loginManager';
+
+import {
+	parseParametersFromArguments,
+	applyParameters,
+	type Parameter
+} from './browser-polyfills';
 
 import type {
 	SupibotCommandDetail,
@@ -15,10 +18,12 @@ import type {
 	// $pipe
 	PipeCommand,
 	PipeCommandData,
-} from './supibotCommandTypes';
+} from './commandTypes';
 
 /**
  * Queries `/api/bot/command/detail/:name` for command information.
+ *
+ * The result is cached in sessionStorage to avoid excessive requests.
  * @param commandName Command name to look up.
  * @returns Command detail
  */

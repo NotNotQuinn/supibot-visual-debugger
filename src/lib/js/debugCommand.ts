@@ -1,7 +1,7 @@
 
 import type { writeConsoleFn, MessagePart } from "$lib/message";
 import * as loginManager from './loginManager';
-import * as supibotCommand from './supibotCommand';
+import * as supibotCommand from './supibot/command';
 import ErrorStackParser from 'error-stack-parser';
 import { supibotCommand as supibotCommandStore } from '../stores';
 import { get } from 'svelte/store';
