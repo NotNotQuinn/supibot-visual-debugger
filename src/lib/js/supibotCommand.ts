@@ -101,6 +101,13 @@ export async function parse(invocation: string, args: string[]): Promise<AnyComm
 		parameters: supibotInterpretation.parameters,
 	};
 
+	// https://github.com/Supinic/supi-core/blob/c0a400a6eb64556c153db955e468e35fd7f59908/classes/command.js#L150
+	// privilegedCommandCharacters: Characters treated in a special way for command names.
+	if (invocation.startsWith('$')) {
+		args.unshift(invocation.slice(1));
+		invocation = '$';
+	}
+
 	if (commandInfo.name == "pipe") {
 		cmd.instanceData = await parse_pipe_command(cmd as Exclude<PipeCommand, "data">);
 	} else if (commandInfo.name == "alias" && (invocation == "$" || args[0] == "try" || args[0] == "run")) {
